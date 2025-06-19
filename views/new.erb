@@ -1,0 +1,38 @@
+<div class="detail-container">
+    <h2>新しいレストランを追加</h2>
+    
+    <form action="/restaurants" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="name">レストラン名 *</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="restaurant_city">都市</label>
+            <input type="text" id="restaurant_city" name="restaurant_city">
+        </div>
+        
+        <div class="form-group">
+            <label for="address">住所</label>
+            <input type="text" id="address" name="address">
+        </div>
+        
+        <div class="form-group">
+            <label for="description">説明</label>
+            <textarea id="description" name="description"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="image">画像ファイル</label>
+            <input type="file" id="image" name="image" accept="image/*">
+            <small style="color: #666; font-size: 12px;">
+                JPG, PNG, GIF, WebP形式の画像ファイルを選択してください
+            </small>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <button type="submit" class="btn btn-success">保存</button>
+            <a href="/" class="btn">キャンセル</a>
+        </div>
+    </form>
+</div>

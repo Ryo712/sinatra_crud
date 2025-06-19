@@ -1,0 +1,28 @@
+<div class="detail-container">
+    <% if @restaurant.image_filename && !@restaurant.image_filename.empty? %>
+        <img src="<%= @restaurant.image_path %>" alt="<%= @restaurant.name %>" class="item-image">
+    <% end %>
+    
+    <h2><%= @restaurant.name %></h2>
+    
+    <div style="margin: 20px 0;">
+        <p><strong>都市:</strong> <%= @restaurant.restaurant_city %></p>
+        <p><strong>住所:</strong> <%= @restaurant.address %></p>
+        <p><strong>説明:</strong></p>
+        <p><%= @restaurant.description %></p>
+        <p><strong>登録日:</strong> <%= @restaurant.created_at.strftime('%Y年%m月%d日') if @restaurant.created_at %></p>
+        <% if @restaurant.updated_at != @restaurant.created_at %>
+            <p><strong>更新日:</strong> <%= @restaurant.updated_at.strftime('%Y年%m月%d日') if @restaurant.updated_at %></p>
+        <% end %>
+    </div>
+    
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="/restaurants/<%= @restaurant.id %>/edit" class="btn">編集</a>
+        <form style="display: inline;" action="/restaurants/<%= @restaurant.id %>" method="post" 
+              onsubmit="return confirm('本当に削除しますか？')">
+            <input type="hidden" name="_method" value="delete">
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
+        <a href="/" class="btn">一覧に戻る</a>
+    </div>
+</div>

@@ -1,0 +1,24 @@
+<div style="text-align: center; margin-bottom: 30px;">
+    <a href="/new" class="btn">新しいレストランを追加</a>
+</div>
+
+<% if @restaurants.empty? %>
+    <div style="text-align: center; margin-top: 50px;">
+        <p>まだレストランが登録されていません。</p>
+        <a href="/new" class="btn">最初のレストランを追加する</a>
+    </div>
+<% else %>
+    <div class="card-grid">
+        <% @restaurants.each do |restaurant| %>
+            <div class="card" onclick="location.href='/restaurants/<%= restaurant.id %>'">
+                <% if restaurant.image_filename && !restaurant.image_filename.empty? %>
+                    <img src="<%= restaurant.image_path %>" alt="<%= restaurant.name %>" class="item-image">
+                <% end %>
+                <h3><%= restaurant.name %></h3>
+                <p><strong>都市:</strong> <%= restaurant.restaurant_city %></p>
+                <p><strong>住所:</strong> <%= restaurant.address %></p>
+                <p><%= restaurant.description %></p>
+            </div>
+        <% end %>
+    </div>
+<% end %>
