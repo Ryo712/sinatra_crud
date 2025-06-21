@@ -1,0 +1,262 @@
+<div class="reservation-container">
+    <div class="restaurant-header">
+        <h2>予約フォーム</h2>
+        <div class="restaurant-info">
+            <h3><%= @restaurant.name %></h3>
+            <p>📍 <%= @restaurant.restaurant_city %> - <%= @restaurant.address %></p>
+        </div>
+    </div>
+
+    <!-- エラーメッセージ表示 -->
+    <% if @errors && !@errors.empty? %>
+        <div class="error-messages">
+            <h4>入力に問題があります：</h4>
+            <ul>
+                <% @errors.each do |field, messages| %>
+                    <% messages.each do |message| %>
+                        <li><%= field %>: <%= message %></li>
+                    <% end %>
+                <% end %>
+            </ul>
+        </div>
+    <% end %>
+
+    <form action="/restaurants/<%= @restaurant.id %>/reservations" method="post" class="reservation-form">
+        <div class="form-group">
+            <label for="user_name">お名前 *</label>
+            <input type="text" 
+                   id="user_name" 
+                   name="user_name" 
+                   value="<%= @user_name || current_user.username %>" 
+                   required 
+                   placeholder="予約者のお名前を入力してください">
+        </div>
+
+        <div class="form-group">
+            <label for="party_size">人数 *</label>
+            <input type="number" 
+                   id="party_size" 
+                   name="party_size" 
+                   value="<%= @party_size || 2 %>" 
+                   min="1" 
+                   max="20" 
+                   required>
+            <small>1〜20人まで選択できます</small>
+        </div>
+
+        <div class="form-group">
+            <label for="user_phone">電話番号</label>
+            <input type="tel" 
+                   id="user_phone" 
+                   name="user_phone" 
+                   value="<%= @user_phone %>" 
+                   placeholder="090-1234-5678">
+            <small>緊急時の連絡先（任意）</small>
+        </div>
+
+        <div class="form-group">
+            <label for="booking_date">希望日 *</label>
+            <input type="date" 
+                   id="booking_date" 
+                   name="booking_date" 
+                   value="<%= @booking_date %>" 
+                   min="<%= @min_date %>" 
+                   required>
+            <small>明日以降の日付を選択してください</small>
+        </div>
+
+        <div class="form-group">
+            <label for="booking_time">希望時間 *</label>
+            <select id="booking_time" name="booking_time" required>
+                <option value="">時間を選択してください</option>
+                <% available_times.each do |display_time, value_time| %>
+                    <option value="<%= value_time %>" 
+                            <%= 'selected' if @booking_time == value_time %>>
+                        <%= display_time %>
+                    </option>
+                <% end %>
+            </select>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large">
+                📅 予約を確定する
+            </button>
+            <a href="/restaurants/<%= @restaurant.id %>" class="btn btn-secondary">
+                キャンセル
+            </a>
+        </div>
+
+        <div class="reservation-notes">
+            <h4>予約に関する注意事項</h4>
+            <ul>
+                <li>予約の変更・キャンセルは前日までにお願いします</li>
+                <li>大人数でのご利用の場合は、事前にレストランにご相談ください</li>
+                <li>当日の遅刻や変更がある場合は、直接レストランにご連絡ください</li>
+            </ul>
+        </div>
+    </form>
+</div>
+
+<style>
+.reservation-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.restaurant-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.restaurant-header h2 {
+    margin: 0 0 15px 0;
+    font-size: 28px;
+}
+
+.restaurant-info h3 {
+    margin: 0 0 10px 0;
+    font-size: 24px;
+}
+
+.restaurant-info p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 16px;
+}
+
+.error-messages {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.error-messages h4 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+}
+
+.error-messages ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.reservation-form {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+    font-size: 16px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
+}
+
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.form-actions {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.btn {
+    display: inline-block;
+    padding: 15px 30px;
+    margin: 0 10px;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-large {
+    padding: 18px 40px;
+    font-size: 18px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #545b62;
+}
+
+.reservation-notes {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 30px;
+    border-left: 4px solid #667eea;
+}
+
+.reservation-notes h4 {
+    margin: 0 0 15px 0;
+    color: #495057;
+    font-size: 16px;
+}
+
+.reservation-notes ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #6c757d;
+}
+
+.reservation-notes li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+</style>

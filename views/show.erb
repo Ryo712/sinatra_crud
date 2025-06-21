@@ -1,28 +1,218 @@
 <div class="detail-container">
+    <!-- 予約成功メッセージ -->
+    <% if params[:booking_success] %>
+        <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            ✅ <strong>予約が完了しました！</strong>
+        </div>
+    <% end %>
+
+    <!-- エラーメッセージ表示 -->
+    <% if @errors && !@errors.empty? %>
+        <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <strong>エラー:</strong>
+            <ul>
+                <% @errors.each do |field, messages| %>
+                    <% messages.each do |message| %>
+                        <li><%= field %>: <%= message %></li>
+                    <% end %>
+                <% end %>
+            </ul>
+        </div>
+    <% end %>
+
+    <!-- レストラン画像（全幅） -->
     <% if @restaurant.image_filename && !@restaurant.image_filename.empty? %>
         <img src="<%= @restaurant.image_path %>" alt="<%= @restaurant.name %>" class="item-image">
     <% end %>
     
     <h2><%= @restaurant.name %></h2>
     
-    <div style="margin: 20px 0;">
-        <p><strong>都市:</strong> <%= @restaurant.restaurant_city %></p>
-        <p><strong>住所:</strong> <%= @restaurant.address %></p>
-        <p><strong>説明:</strong></p>
-        <p><%= @restaurant.description %></p>
-        <p><strong>登録日:</strong> <%= @restaurant.created_at.strftime('%Y年%m月%d日') if @restaurant.created_at %></p>
-        <% if @restaurant.updated_at != @restaurant.created_at %>
-            <p><strong>更新日:</strong> <%= @restaurant.updated_at.strftime('%Y年%m月%d日') if @restaurant.updated_at %></p>
+    <!-- レストラン詳細と予約フォームを横並び -->
+    <div class="content-wrapper">
+        <!-- 左側：レストラン詳細情報 -->
+        <div class="restaurant-details">
+            <p><strong>都市:</strong> <%= @restaurant.restaurant_city %></p>
+            <p><strong>住所:</strong> <%= @restaurant.address %></p>
+            <p><strong>説明:</strong></p>
+            <p><%= @restaurant.description %></p>
+            <p><strong>登録日:</strong> <%= @restaurant.created_at.strftime('%Y年%m月%d日') if @restaurant.created_at %></p>
+            <% if @restaurant.updated_at != @restaurant.created_at %>
+                <p><strong>更新日:</strong> <%= @restaurant.updated_at.strftime('%Y年%m月%d日') if @restaurant.updated_at %></p>
+            <% end %>
+        </div>
+
+        <!-- 右側：予約フォーム（一般ユーザーのみ表示） -->
+        <% if logged_in? && user? %>
+            <div class="booking-form-container">
+                <div class="booking-form">
+                    <h3>📅 予約フォーム</h3>
+                    <form action="/restaurants/<%= @restaurant.id %>/reservations" method="post">
+                        <div>
+                            <label>予約者名:</label>
+                            <input type="text" name="user_name" value="<%= @user_name || current_user.username %>" required>
+                        </div>
+                        
+                        <div>
+                            <label>人数:</label>
+                            <input type="number" name="party_size" value="<%= @party_size || 2 %>" min="1" max="20" required> 人
+                        </div>
+                        
+                        <div>
+                            <label>希望日:</label>
+                            <input type="date" name="booking_date" value="<%= @booking_date %>" min="<%= (Date.today + 1).strftime('%Y-%m-%d') %>" required>
+                        </div>
+                        
+                        <div>
+                            <label>希望時間:</label>
+                            <select name="booking_time" required>
+                                <option value="">時間を選択</option>
+                                <% (10..21).each do |hour| %>
+                                    <% time_value = "#{sprintf('%02d', hour)}:00" %>
+                                    <option value="<%= time_value %>" <%= 'selected' if @booking_time == time_value %>><%= time_value %></option>
+                                <% end %>
+                            </select>
+                        </div>
+                        
+                        <button type="submit">📅 予約する</button>
+                    </form>
+                </div>
+            </div>
         <% end %>
     </div>
-    
+
+    <!-- 未ログインユーザー向けメッセージ -->
+    <% unless logged_in? %>
+        <div style="background: #fff3cd; padding: 20px; margin: 30px 0; border-radius: 8px; text-align: center;">
+            <h3>予約をするにはログインが必要です</h3>
+            <a href="/login" class="btn">ログイン</a>
+            <a href="/signup" class="btn">新規登録</a>
+        </div>
+    <% end %>
+
+    <!-- 管理者向けボタン -->
+    <% if logged_in? && admin? %>
+        <div style="background: #f8f9fa; padding: 20px; margin: 30px 0; border-radius: 8px; text-align: center;">
+           
+            <a href="/restaurants/<%= @restaurant.id %>/edit" class="btn">編集</a>
+            <form style="display: inline;" action="/restaurants/<%= @restaurant.id %>" method="post" 
+                  onsubmit="return confirm('本当に削除しますか？')">
+                <input type="hidden" name="_method" value="delete">
+                <button type="submit" class="btn" style="background: #dc3545; color: white;">削除</button>
+            </form>
+        </div>
+    <% end %>
+
+    <!-- ナビゲーション -->
     <div style="text-align: center; margin-top: 30px;">
-        <a href="/restaurants/<%= @restaurant.id %>/edit" class="btn">編集</a>
-        <form style="display: inline;" action="/restaurants/<%= @restaurant.id %>" method="post" 
-              onsubmit="return confirm('本当に削除しますか？')">
-            <input type="hidden" name="_method" value="delete">
-            <button type="submit" class="btn btn-danger">削除</button>
-        </form>
         <a href="/" class="btn">一覧に戻る</a>
     </div>
 </div>
+
+<style>
+.detail-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.item-image {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 5px;
+    text-decoration: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+/* 横並びレイアウト */
+.content-wrapper {
+    display: flex;
+    gap: 30px;
+    margin: 20px 0;
+}
+
+.restaurant-details {
+    flex: 2;
+}
+
+.booking-form-container {
+    flex: 1;
+    min-width: 280px;
+}
+
+/* 予約フォーム */
+.booking-form {
+    border: 1px solid #28a745;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.booking-form h3 {
+    margin: 0 0 15px 0;
+}
+
+.booking-form div {
+    margin-bottom: 10px;
+}
+
+.booking-form label {
+    display: block;
+    margin-bottom: 3px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.booking-form input, .booking-form select {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.booking-form input[type="number"] {
+    width: 60px;
+}
+
+.booking-form input[type="text"], .booking-form input[type="date"], .booking-form select {
+    width: 100%;
+}
+
+.booking-form button {
+    width: 100%;
+    background: #28a745;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.booking-form button:hover {
+    background: #218838;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .content-wrapper {
+        flex-direction: column;
+    }
+}
+</style>

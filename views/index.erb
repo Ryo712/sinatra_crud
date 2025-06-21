@@ -1,12 +1,31 @@
-<div style="text-align: center; margin-bottom: 30px;">
-    <a href="/new" class="btn">新しいレストランを追加</a>
-</div>
+<!-- ユーザー情報とナビゲーション -->
+
+<!-- 管理者のみ表示：新規追加ボタン -->
+<% if logged_in? && current_user.admin? %>
+    <div class="add-new-section" style="text-align: center; margin-bottom: 30px;">
+        <a href="/new" class="btn-add-new">新しいレストランを追加</a>
+    </div>
+<% end %>
+
+<% if logged_in? && user? %>
+    <div class="favorite-section" style="text-align: center; margin-bottom: 30px;">
+        <a href="/favorite" class="btn-favorite">お気に入り</a>
+    </div>
+<% end %>
+
+
 
 <% if @restaurants.empty? %>
     <div style="text-align: center; margin-top: 50px;">
         <p>まだレストランが登録されていません。</p>
-        <a href="/new" class="btn">最初のレストランを追加する</a>
+        <% if logged_in? && current_user.admin? %>
+            <a href="/new" class="btn">最初のレストランを追加する</a>
+        <% else %>
+            <p style="color: #6c757d;">レストランの追加は管理者のみ可能です。</p>
+        <% end %>
     </div>
+
+    
 <% else %>
     <div class="card-grid">
         <% @restaurants.each do |restaurant| %>

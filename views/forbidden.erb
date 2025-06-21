@@ -1,0 +1,82 @@
+<div class="error-container" style="text-align: center; padding: 50px 20px;">
+    <h1 style="color: #dc3545; font-size: 3em; margin-bottom: 20px;">403</h1>
+    <h2 style="color: #6c757d; margin-bottom: 30px;">アクセス権限がありません</h2>
+    
+    <div style="max-width: 600px; margin: 0 auto;">
+        <p style="font-size: 1.1em; color: #6c757d; margin-bottom: 30px;">
+            このページにアクセスするには管理者権限が必要です。
+        </p>
+        
+        <% if logged_in? %>
+            <p style="color: #6c757d; margin-bottom: 30px;">
+                現在のユーザー: <strong><%= current_user.username %></strong> (<%= current_user.role_name %>)
+            </p>
+            
+            <div style="margin-top: 30px;">
+                <a href="/" class="btn btn-primary" style="margin-right: 10px;">トップページに戻る</a>
+                <form style="display: inline;" action="/logout" method="post">
+                    <button type="submit" class="btn btn-secondary">ログアウト</button>
+                </form>
+            </div>
+        <% else %>
+            <p style="color: #6c757d; margin-bottom: 30px;">
+                管理者としてログインしてください。
+            </p>
+            
+            <div style="margin-top: 30px;">
+                <a href="/login" class="btn btn-primary" style="margin-right: 10px;">ログイン</a>
+                <a href="/" class="btn btn-secondary">トップページに戻る</a>
+            </div>
+        <% end %>
+    </div>
+    
+    <div style="margin-top: 50px; padding-top: 30px; border-top: 1px solid #dee2e6;">
+        <p style="color: #adb5bd; font-size: 0.9em;">
+            管理者権限が必要な機能：
+        </p>
+        <ul style="color: #6c757d; font-size: 0.9em; list-style: none; padding: 0;">
+            <li>• レストランの新規登録</li>
+            <li>• レストラン情報の編集</li>
+            <li>• レストランの削除</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.error-container {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 5px;
+    text-decoration: none;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #545b62;
+}
+</style>
