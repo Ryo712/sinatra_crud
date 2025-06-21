@@ -20,7 +20,7 @@
             left: 0;
             right: 0;
             background-color:rgb(179, 255, 0);
-            color: white;
+            color: black;
             padding: 20px;
             text-align: left;
             z-index: 1000;
@@ -168,14 +168,14 @@
     <!-- 固定ヘッダー -->
     <div class="fixed-header">
     <div class="header-content">
-        <h1><a href="/" class="title-link">Super-Simple-booking-App</h1>
+        <h1><a href="/" class="title-link">Super-Simple-Booking-App</a></h1>
         
         <!-- ログイン状態による表示切り替え -->
         <div class="header-nav">
-            <% if defined?(@current_user) && @current_user %>
+            <% if logged_in? %>
                 <!-- ログイン済みの場合 -->
                 <div class="user-info">
-                    <span class="welcome-message">ようこそ、<%= @current_user.username %>さん</span>
+                    <span class="welcome-message">ようこそ、<%= current_user.username %>さん</span>
                     <form style="display: inline;" action="/logout" method="post" class="logout-form">
                         <button type="submit" class="btn btn-logout" onclick="return confirm('ログアウトしますか？')">ログアウト</button>
                     </form>
