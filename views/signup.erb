@@ -1,0 +1,141 @@
+<div class="detail-container">
+    <h2>新規ユーザー登録</h2>
+    
+    <!-- エラーメッセージ表示 -->
+    <% if defined?(@errors) && @errors && !@errors.empty? %>
+        <div class="error-messages" role="alert">
+            <% @errors.each do |error| %>
+                <div class="error-message"><%= Rack::Utils.escape_html(error) %></div>
+            <% end %>
+        </div>
+    <% end %>
+    
+    <form action="/users" method="post" novalidate>
+        <!-- ユーザーネーム -->
+        <div class="form-group">
+            <label for="username">ユーザーネーム *</label>
+            <input type="text" 
+                   id="username" 
+                   name="username" 
+                   value="<%= Rack::Utils.escape_html(defined?(@username) && @username ? @username : '') %>" 
+                   required
+                   minlength="3"
+                   maxlength="50"
+                   pattern="[a-zA-Z0-9_]{3,50}"
+                   title="3文字以上50文字以下の英数字とアンダースコア"
+                   autocomplete="username"
+                   spellcheck="false">
+            <small class="help-text">
+                3文字以上50文字以下、英数字とアンダースコアのみ使用可能
+            </small>
+        </div>
+        
+        <!-- メールアドレス -->
+        <div class="form-group">
+            <label for="email">メールアドレス *</label>
+            <input type="email" 
+                   id="email" 
+                   name="email" 
+                   value="<%= Rack::Utils.escape_html(defined?(@email) && @email ? @email : '') %>" 
+                   required
+                   maxlength="255"
+                   autocomplete="email"
+                   spellcheck="false">
+            <small class="help-text">
+                有効なメールアドレスを入力してください
+            </small>
+        </div>
+        
+        <!-- パスワード -->
+        <div class="form-group">
+            <label for="password">パスワード *</label>
+            <input type="password" 
+                   id="password" 
+                   name="password" 
+                   required 
+                   minlength="6"
+                   maxlength="128"
+                   autocomplete="new-password">
+            <small class="help-text">
+                6文字以上128文字以下で入力してください
+            </small>
+        </div>
+        
+        <!-- パスワード確認 -->
+        <div class="form-group">
+            <label for="password_confirmation">パスワード確認 *</label>
+            <input type="password" 
+                   id="password_confirmation" 
+                   name="password_confirmation" 
+                   required 
+                   minlength="6"
+                   maxlength="128"
+                   autocomplete="new-password">
+            <small class="help-text">
+                上記と同じパスワードを入力してください
+            </small>
+        </div>
+        
+        <!-- 送信ボタン -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success" id="submit-btn">
+                <span class="btn-text">登録</span>
+                <span class="btn-loading" style="display: none;">登録中...</span>
+            </button>
+            <a href="/" class="btn btn-secondary">キャンセル</a>
+        </div>
+    </form>
+    
+    <!-- ログインリンク -->
+    <div class="auth-link">
+        <p>既にアカウントをお持ちですか？ <a href="/login" class="link">ログイン</a></p>
+    </div>
+</div>
+
+<!-- JavaScript for form validation and UX improvements -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const submitBtn = document.getElementById('submit-btn');
+    const btnText = document.querySelector('.btn-text');
+    const btnLoading = document.querySelector('.btn-loading');
+    const passwordField = document.getElementById('password');
+    const confirmPasswordField = document.getElementById('password_confirmation');
+    
+    // パスワード確認のリアルタイムバリデーション
+    function validatePasswordConfirmation() {
+        if (confirmPasswordField.value && passwordField.value !== confirmPasswordField.value) {
+            confirmPasswordField.setCustomValidity('パスワードが一致しません');
+        } else {
+            confirmPasswordField.setCustomValidity('');
+        }
+    }
+    
+    passwordField.addEventListener('input', validatePasswordConfirmation);
+    confirmPasswordField.addEventListener('input', validatePasswordConfirmation);
+    
+    // フォーム送信時の処理
+    form.addEventListener('submit', function(e) {
+        // 送信ボタンを無効化（二重送信防止）
+        submitBtn.disabled = true;
+        btnText.style.display = 'none';
+        btnLoading.style.display = 'inline';
+        
+        // バリデーションエラーがある場合は送信を中止
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            submitBtn.disabled = false;
+            btnText.style.display = 'inline';
+            btnLoading.style.display = 'none';
+            return false;
+        }
+    });
+    
+    // ページ離脱時にボタンを元に戻す
+    window.addEventListener('pageshow', function() {
+        submitBtn.disabled = false;
+        btnText.style.display = 'inline';
+        btnLoading.style.display = 'none';
+    });
+});
+</script>

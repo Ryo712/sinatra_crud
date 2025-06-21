@@ -7,19 +7,39 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            padding-top: 150px; /* ヘッダーの高さ分の余白 */
+        }
+        
+        /* 固定ヘッダー */
+        .fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color:rgb(179, 255, 0);
+            color: white;
+            padding: 20px;
+            text-align: left;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .fixed-header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: red;
+        }
+        
+        /* メインコンテンツエリア */
+        .main-content {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f5f5f5;
         }
-        .header {
-            background-color: #333;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 30px;
-            border-radius: 8px;
-        }
+        
         .btn {
             background-color: #007bff;
             color: white;
@@ -31,6 +51,43 @@
             display: inline-block;
             margin: 5px;
         }
+
+        .btn-add-new {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            text-align: center;
+            align-items: center;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+        }
+
+        .header-content {
+        display: flex;
+        justify-content: space-between; /* 左右に分離 */
+        align-items: center;
+        }
+
+        .header-content a {
+        text-decoration: none;
+        color: inherit;
+        }
+
+        
+
+        .header-nav {
+        justify-content: flex-end; /* 右寄せ */
+        margin-left: auto; /* 確実に右寄せ */
+        }
+        
+
         .btn:hover {
             background-color: #0056b3;
         }
@@ -79,6 +136,15 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
+        .form-group input[type="file"] {
+            padding: 5px;
+            border: 2px dashed #ddd;
+            background-color: #f9f9f9;
+        }
+        .form-group input[type="file"]:hover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
         .form-group textarea {
             height: 100px;
             resize: vertical;
@@ -99,9 +165,37 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>レストラン管理アプリ</h1>
+    <!-- 固定ヘッダー -->
+    <div class="fixed-header">
+    <div class="header-content">
+        <h1><a href="/" class="title-link">Super-Simple-booking-App</h1>
+        
+        <!-- ログイン状態による表示切り替え -->
+        <div class="header-nav">
+            <% if defined?(@current_user) && @current_user %>
+                <!-- ログイン済みの場合 -->
+                <div class="user-info">
+                    <span class="welcome-message">ようこそ、<%= @current_user.username %>さん</span>
+                    <form style="display: inline;" action="/logout" method="post" class="logout-form">
+                        <button type="submit" class="btn btn-logout" onclick="return confirm('ログアウトしますか？')">ログアウト</button>
+                    </form>
+                </div>
+            <% else %>
+                <!-- 未ログインの場合 -->
+                <div class="auth-nav">
+                    <a href="/login" class="btn btn-login">ログイン</a>
+                    <a href="/signup" class="btn btn-signup">新規登録</a>
+                </div>
+            <% end %>
+        </div>
+        
+        
     </div>
-    <%= yield %>
+</div>
+    
+    <!-- メインコンテンツ -->
+    <div class="main-content">
+        <%= yield %>
+    </div>
 </body>
 </html>

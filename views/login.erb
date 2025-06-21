@@ -1,0 +1,55 @@
+<div class="detail-container">
+    <h2>ログイン</h2>
+    
+    <!-- 新規登録成功メッセージ -->
+    <% if params[:signup_success] %>
+        <div class="success-message">
+            ユーザー登録が完了しました！ログインしてください。
+        </div>
+    <% end %>
+    
+    <!-- ログイン必須メッセージ -->
+    <% if params[:error] == 'login_required' %>
+        <div class="error-messages">
+            <div class="error-message">ログインが必要です</div>
+        </div>
+    <% end %>
+    
+    <!-- エラーメッセージ -->
+    <% if defined?(@error) && @error %>
+        <div class="error-messages" role="alert">
+            <div class="error-message"><%= Rack::Utils.escape_html(@error) %></div>
+        </div>
+    <% end %>
+    
+    <form action="/login" method="post">
+        <div class="form-group">
+            <label for="username_or_email">ユーザーネームまたはメールアドレス *</label>
+            <input type="text" 
+                   id="username_or_email" 
+                   name="username_or_email" 
+                   value="<%= Rack::Utils.escape_html(defined?(@username_or_email) && @username_or_email ? @username_or_email : '') %>" 
+                   required
+                   autocomplete="username"
+                   spellcheck="false">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">パスワード *</label>
+            <input type="password" 
+                   id="password" 
+                   name="password" 
+                   required
+                   autocomplete="current-password">
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success">ログイン</button>
+            <a href="/" class="btn btn-secondary">キャンセル</a>
+        </div>
+    </form>
+    
+    <div class="auth-link">
+        <p>アカウントをお持ちでない方は <a href="/signup" class="link">新規登録</a></p>
+    </div>
+</div>

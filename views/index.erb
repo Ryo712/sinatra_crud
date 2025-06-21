@@ -1,5 +1,6 @@
-<div style="text-align: center; margin-bottom: 30px;">
-    <a href="/new" class="btn">新しいレストランを追加</a>
+<!-- index.erbに新しいセクションを追加 -->
+<div class="add-new-section">
+    <a href="/new" class="btn-add-new">新しいレストランを追加</a>
 </div>
 
 <% if @restaurants.empty? %>
@@ -7,6 +8,8 @@
         <p>まだレストランが登録されていません。</p>
         <a href="/new" class="btn">最初のレストランを追加する</a>
     </div>
+
+    
 <% else %>
     <div class="card-grid">
         <% @restaurants.each do |restaurant| %>
