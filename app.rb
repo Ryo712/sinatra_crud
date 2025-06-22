@@ -292,14 +292,10 @@ def user?
   current_user&.user?
 end
 
-# ★修正：お気に入りかどうかをチェックするヘルパーメソッド（Sequel形式）
+# ★修正：お気に入りかどうかをチェックするヘルパーメソッド（正しいSequel構文）
 def is_favorited?(restaurant_id)
   return false unless logged_in?
-  result = DB.fetch(
-    "SELECT id FROM favorites WHERE user_id = ? AND restaurant_id = ?",
-    current_user.id, restaurant_id
-  ).first
-  !result.nil?
+  !DB[:favorites].where(user_id: current_user.id, restaurant_id: restaurant_id).empty?
 end
 
 # レストラン関連ルーティング
@@ -597,7 +593,7 @@ post '/restaurants/:id/reservations' do
   end
 end
 
-# ★修正：お気に入り追加/削除処理（トグル形式・Sequel形式）
+# ★修正：お気に入り追加/削除処理（正しいSequel構文）
 post '/restaurants/:id/favorite' do
   require_login
   halt 403 if admin?  # 管理者は利用不可
@@ -608,50 +604,41 @@ post '/restaurants/:id/favorite' do
   user_id = current_user.id
   
   begin
-    # 既にお気に入りかチェック
-    existing = DB.fetch(
-      "SELECT id FROM favorites WHERE user_id = ? AND restaurant_id = ?",
-      user_id, restaurant_id
-    ).first
+    # 既にお気に入りかチェック（正しいSequel構文）
+    existing = DB[:favorites].where(user_id: user_id, restaurant_id: restaurant_id).first
     
     if existing.nil?
-      # お気に入り追加
-      DB.run(
-        "INSERT INTO favorites (user_id, restaurant_id) VALUES (?, ?)",
-        user_id, restaurant_id
-      )
+      # お気に入り追加（正しいSequel構文）
+      DB[:favorites].insert(user_id: user_id, restaurant_id: restaurant_id)
       status 201
       { success: true, action: 'added', message: "お気に入りに追加しました" }.to_json
     else
-      # お気に入り削除（トグル動作）
-      DB.run(
-        "DELETE FROM favorites WHERE user_id = ? AND restaurant_id = ?",
-        user_id, restaurant_id
-      )
+      # お気に入り削除（正しいSequel構文）
+      DB[:favorites].where(user_id: user_id, restaurant_id: restaurant_id).delete
       status 200
       { success: true, action: 'removed', message: "お気に入りから削除しました" }.to_json
     end
     
   rescue => e
     puts "Favorite error: #{e.message}"
+    puts "Backtrace: #{e.backtrace.join("\n")}"
     status 500
     { success: false, message: "エラーが発生しました" }.to_json
   end
 end
 
-# お気に入りページ
+# ★修正：お気に入りページ（正しいSequel構文）
 get '/favorite' do
   require_login
   halt 403 if admin?  # 管理者はアクセス不可
   
-  # お気に入りレストランを取得
-  @favorite_restaurants = DB.fetch(
-    "SELECT r.* FROM restaurants r 
-     INNER JOIN favorites f ON r.id = f.restaurant_id 
-     WHERE f.user_id = ? 
-     ORDER BY f.created_at DESC",
-    [current_user.id]
-  ).all.map { |row| Restaurant.new(row) }
+  # お気に入りレストランを取得（正しいSequel構文）
+  @favorite_restaurants = DB[:restaurants]
+    .join(:favorites, restaurant_id: :id)
+    .where(Sequel[:favorites][:user_id] => current_user.id)
+    .order(Sequel.desc(Sequel[:favorites][:created_at]))
+    .all
+    .map { |row| Restaurant.new(row) }
   
   erb :favorite
 end
