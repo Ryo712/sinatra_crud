@@ -175,7 +175,7 @@
             <% if logged_in? %>
                 <!-- ログイン済みの場合 -->
                 <div class="user-info">
-                    <span class="welcome-message">ようこそ、<%= current_user.username %>さん</span>
+                    <span class="welcome-message"><%= current_user.username %>さん</span>
                     <form style="display: inline;" action="/logout" method="post" class="logout-form">
                         <button type="submit" class="btn btn-logout" onclick="return confirm('ログアウトしますか？')">ログアウト</button>
                     </form>
