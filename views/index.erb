@@ -1,5 +1,3 @@
-<!-- ユーザー情報とナビゲーション -->
-
 <!-- 管理者のみ表示：新規追加ボタン -->
 <% if logged_in? && current_user.admin? %>
     <div class="add-new-section" style="text-align: center; margin-bottom: 30px;">
@@ -13,8 +11,6 @@
     </div>
 <% end %>
 
-
-
 <% if @restaurants.empty? %>
     <div style="text-align: center; margin-top: 50px;">
         <p>まだレストランが登録されていません。</p>
@@ -25,19 +21,151 @@
         <% end %>
     </div>
 
-    
 <% else %>
     <div class="card-grid">
         <% @restaurants.each do |restaurant| %>
-            <div class="card" onclick="location.href='/restaurants/<%= restaurant.id %>'">
-                <% if restaurant.image_filename && !restaurant.image_filename.empty? %>
-                    <img src="<%= restaurant.image_path %>" alt="<%= restaurant.name %>" class="item-image">
+            <div class="card">
+                <!-- お気に入りボタン（一般ユーザーのみ表示） -->
+                <% if logged_in? && user? %>
+                    <div class="favorite-button-container">
+                        <button class="favorite-btn" data-restaurant-id="<%= restaurant.id %>">
+                            <% if is_favorited?(restaurant.id) %>
+                                ★
+                            <% else %>
+                                ☆
+                            <% end %>
+                        </button>
+                    </div>
                 <% end %>
-                <h3><%= restaurant.name %></h3>
-                <p><strong>都市:</strong> <%= restaurant.restaurant_city %></p>
-                <p><strong>住所:</strong> <%= restaurant.address %></p>
-                <p><%= restaurant.description %></p>
+                
+                <!-- クリッカブルエリア（カードとスターのクリックを分ける） -->
+                <div class="card-content" onclick="location.href='/restaurants/<%= restaurant.id %>'">
+                    <% if restaurant.image_filename && !restaurant.image_filename.empty? %>
+                        <img src="<%= restaurant.image_path %>" alt="<%= restaurant.name %>" class="item-image">
+                    <% end %>
+                    <h3><%= restaurant.name %></h3>
+                    <p><strong>都市:</strong> <%= restaurant.restaurant_city %></p>
+                    <p><strong>住所:</strong> <%= restaurant.address %></p>
+                    <p><%= restaurant.description %></p>
+                </div>
             </div>
         <% end %>
     </div>
 <% end %>
+
+<!-- CSS -->
+<style>
+.card {
+    position: relative;
+}
+
+.favorite-button-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+.favorite-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    color: #ffd700;
+}
+
+.favorite-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.favorite-btn:active {
+    transform: scale(0.95);
+}
+
+.card-content {
+    cursor: pointer;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .favorite-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 18px;
+    }
+    
+    .favorite-button-container {
+        top: 8px;
+        right: 8px;
+    }
+}
+</style>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // お気に入りボタンのクリックイベント
+    document.querySelectorAll('.favorite-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation(); // カードのクリックイベントを防ぐ
+            
+            const restaurantId = this.dataset.restaurantId;
+            const currentIcon = this.textContent.trim();
+            
+            // ボタンを一時的に無効化
+            this.disabled = true;
+            this.style.opacity = '0.5';
+            
+            // Ajax リクエスト
+            fetch(`/restaurants/${restaurantId}/favorite`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // アイコンを更新
+                    if (data.action === 'added') {
+                        this.textContent = '★';
+                        this.title = 'お気に入りから削除';
+                    } else {
+                        this.textContent = '☆';
+                        this.title = 'お気に入りに追加';
+                    }
+                    
+                    // 成功時のアニメーション
+                    this.style.transform = 'scale(1.3)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 200);
+                    
+                } else {
+                    // エラー時は元に戻す
+                    console.error('お気に入り処理エラー:', data.message);
+                    alert(data.message || 'エラーが発生しました');
+                }
+            })
+            .catch(error => {
+                console.error('ネットワークエラー:', error);
+                alert('通信エラーが発生しました');
+            })
+            .finally(() => {
+                // ボタンを再有効化
+                this.disabled = false;
+                this.style.opacity = '';
+            });
+        });
+    });
+});
+</script>

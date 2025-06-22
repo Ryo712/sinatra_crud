@@ -20,12 +20,37 @@
         </div>
     <% end %>
 
+    <!-- ヘッダー部分（タイトルとお気に入りボタン） -->
+    <div class="header-section">
+        <h2><%= @restaurant.name %></h2>
+        
+        <!-- お気に入りボタン（一般ユーザーのみ表示） -->
+        <% if logged_in? && user? %>
+            <div class="favorite-section-detail">
+                <button class="favorite-btn-detail" data-restaurant-id="<%= @restaurant.id %>">
+                    <span class="star-icon">
+                        <% if is_favorited?(@restaurant.id) %>
+                            ★
+                        <% else %>
+                            ☆
+                        <% end %>
+                    </span>
+                    <span class="favorite-text">
+                        <% if is_favorited?(@restaurant.id) %>
+                            お気に入り済み
+                        <% else %>
+                            お気に入りに追加
+                        <% end %>
+                    </span>
+                </button>
+            </div>
+        <% end %>
+    </div>
+
     <!-- レストラン画像（全幅） -->
     <% if @restaurant.image_filename && !@restaurant.image_filename.empty? %>
         <img src="<%= @restaurant.image_path %>" alt="<%= @restaurant.name %>" class="item-image">
     <% end %>
-    
-    <h2><%= @restaurant.name %></h2>
     
     <!-- レストラン詳細と予約フォームを横並び -->
     <div class="content-wrapper">
@@ -45,7 +70,7 @@
         <% if logged_in? && user? %>
             <div class="booking-form-container">
                 <div class="booking-form">
-                    <h3>📅 予約フォーム</h3>
+                    <h3>予約フォーム</h3>
                     <form action="/restaurants/<%= @restaurant.id %>/reservations" method="post">
                         <div>
                             <label>予約者名:</label>
@@ -142,6 +167,79 @@
     background-color: #0056b3;
 }
 
+/* ヘッダー部分のスタイル */
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header-section h2 {
+    margin: 0;
+    flex: 1;
+}
+
+/* 詳細ページ用お気に入りボタン */
+.favorite-section-detail {
+    flex-shrink: 0;
+}
+
+.favorite-btn-detail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    border: 2px solid #f1c40f;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    color: #8b4513;
+}
+
+.favorite-btn-detail:hover {
+    background: linear-gradient(135deg, #ffed4e, #fff59d);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.favorite-btn-detail:active {
+    transform: translateY(0);
+}
+
+.favorite-btn-detail:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.star-icon {
+    font-size: 20px;
+    color: #ff6b35;
+}
+
+.favorite-text {
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* 状態別スタイル */
+.favorite-btn-detail.favorited {
+    background: linear-gradient(135deg, #ff6b35, #ff8a65);
+    border-color: #ff5722;
+    color: white;
+}
+
+.favorite-btn-detail.favorited:hover {
+    background: linear-gradient(135deg, #ff8a65, #ffab91);
+}
+
 /* 横並びレイアウト */
 .content-wrapper {
     display: flex;
@@ -214,5 +312,133 @@
     .content-wrapper {
         flex-direction: column;
     }
+    
+    .header-section {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .favorite-btn-detail {
+        align-self: flex-end;
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+    
+    .star-icon {
+        font-size: 18px;
+    }
+    
+    .favorite-text {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .favorite-btn-detail .favorite-text {
+        display: none;
+    }
+    
+    .favorite-btn-detail {
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        padding: 0;
+        justify-content: center;
+    }
 }
 </style>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // お気に入りボタンのクリックイベント
+    const favoriteBtn = document.querySelector('.favorite-btn-detail');
+    
+    if (favoriteBtn) {
+        favoriteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const restaurantId = this.dataset.restaurantId;
+            const starIcon = this.querySelector('.star-icon');
+            const favoriteText = this.querySelector('.favorite-text');
+            
+            // ボタンを一時的に無効化
+            this.disabled = true;
+            
+            // Ajax リクエスト
+            fetch(`/restaurants/${restaurantId}/favorite`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // アイコンとテキストを更新
+                    if (data.action === 'added') {
+                        starIcon.textContent = '★';
+                        favoriteText.textContent = 'お気に入り済み';
+                        this.classList.add('favorited');
+                        this.title = 'お気に入りから削除';
+                    } else {
+                        starIcon.textContent = '☆';
+                        favoriteText.textContent = 'お気に入りに追加';
+                        this.classList.remove('favorited');
+                        this.title = 'お気に入りに追加';
+                    }
+                    
+                    // 成功時のアニメーション
+                    this.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 300);
+                    
+                    // 簡単な成功メッセージ（オプション）
+                    const message = document.createElement('div');
+                    message.textContent = data.message;
+                    message.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #28a745;
+                        color: white;
+                        padding: 10px 20px;
+                        border-radius: 5px;
+                        z-index: 1000;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                    `;
+                    document.body.appendChild(message);
+                    
+                    // 3秒後にメッセージを削除
+                    setTimeout(() => {
+                        if (message.parentNode) {
+                            message.parentNode.removeChild(message);
+                        }
+                    }, 3000);
+                    
+                } else {
+                    // エラー時の処理
+                    console.error('お気に入り処理エラー:', data.message);
+                    alert(data.message || 'エラーが発生しました');
+                }
+            })
+            .catch(error => {
+                console.error('ネットワークエラー:', error);
+                alert('通信エラーが発生しました');
+            })
+            .finally(() => {
+                // ボタンを再有効化
+                this.disabled = false;
+            });
+        });
+        
+        // 初期状態の設定
+        const isCurrentlyFavorited = favoriteBtn.querySelector('.star-icon').textContent.trim() === '★';
+        if (isCurrentlyFavorited) {
+            favoriteBtn.classList.add('favorited');
+        }
+    }
+});
+</script>

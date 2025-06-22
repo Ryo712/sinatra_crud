@@ -1,17 +1,326 @@
 <div class="favorite-container">
     <div class="page-header">
         <h1>お気に入り</h1>
-        <p>あなたがお気に入りに登録したレストランを表示します</p>
     </div>
 
-    <!-- 今後ここにお気に入りレストラン一覧を表示 -->
-    <div class="coming-soon">
-        <p>お気に入り機能は現在開発中です。</p>
-        <p>近日中に実装予定です！</p>
-    </div>
+    <% if @favorite_restaurants.empty? %>
+        <div class="empty-favorites">
+            <div class="empty-icon">⭐</div>
+            <h3>お気に入りレストランがありません</h3>
+            <a href="/" class="btn btn-primary">レストランを探す</a>
+        </div>
+    <% else %>
+        <div class="favorites-count">
+            <p><strong><%= @favorite_restaurants.length %></strong>件のお気に入りレストラン</p>
+        </div>
+        
+        <div class="card-grid">
+            <% @favorite_restaurants.each do |restaurant| %>
+                <div class="card">
+                    <!-- お気に入りボタン -->
+                    <div class="favorite-button-container">
+                        <button class="favorite-btn favorited" data-restaurant-id="<%= restaurant.id %>">
+                            ★
+                        </button>
+                    </div>
+                    
+                    <!-- クリッカブルエリア -->
+                    <div class="card-content" onclick="location.href='/restaurants/<%= restaurant.id %>'">
+                        <% if restaurant.image_filename && !restaurant.image_filename.empty? %>
+                            <img src="<%= restaurant.image_path %>" alt="<%= restaurant.name %>" class="item-image">
+                        <% end %>
+                        <h3><%= restaurant.name %></h3>
+                        <p><strong>都市:</strong> <%= restaurant.restaurant_city %></p>
+                        <p><strong>住所:</strong> <%= restaurant.address %></p>
+                        <p><%= restaurant.description %></p>
+                    </div>
+                </div>
+            <% end %>
+        </div>
+    <% end %>
 
     <!-- ナビゲーション -->
     <div class="navigation">
         <a href="/" class="btn btn-secondary">一覧に戻る</a>
     </div>
 </div>
+
+<!-- CSS -->
+<style>
+.favorite-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.page-header p {
+    color: #666;
+    font-size: 16px;
+}
+
+.empty-favorites {
+    text-align: center;
+    padding: 60px 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    margin: 40px 0;
+}
+
+.empty-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
+.empty-favorites h3 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.empty-favorites p {
+    color: #666;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.favorites-count {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 15px;
+    background: #e8f5e8;
+    border-radius: 8px;
+}
+
+.favorites-count p {
+    margin: 0;
+    color: #2d5a2d;
+    font-size: 18px;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.card {
+    position: relative;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.favorite-button-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+.favorite-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    color: #ffd700;
+}
+
+.favorite-btn.favorited {
+    background: rgba(255, 215, 0, 0.9);
+    color: #ff6b35;
+}
+
+.favorite-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.favorite-btn:active {
+    transform: scale(0.95);
+}
+
+.card-content {
+    cursor: pointer;
+    padding: 15px;
+}
+
+.item-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    margin-bottom: 15px;
+}
+
+.card h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 20px;
+}
+
+.card p {
+    margin: 5px 0;
+    color: #666;
+    line-height: 1.5;
+}
+
+.navigation {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    margin: 5px;
+    text-decoration: none;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #545b62;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .card-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .favorite-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 18px;
+    }
+    
+    .favorite-button-container {
+        top: 8px;
+        right: 8px;
+    }
+    
+    .empty-icon {
+        font-size: 60px;
+    }
+}
+
+@media (max-width: 480px) {
+    .favorite-container {
+        padding: 15px;
+    }
+    
+    .empty-favorites {
+        padding: 40px 15px;
+    }
+}
+</style>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // お気に入りボタンのクリックイベント
+    document.querySelectorAll('.favorite-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation(); // カードのクリックイベントを防ぐ
+            
+            const restaurantId = this.dataset.restaurantId;
+            const card = this.closest('.card');
+            
+            // ボタンを一時的に無効化
+            this.disabled = true;
+            this.style.opacity = '0.5';
+            
+            // Ajax リクエスト
+            fetch(`/restaurants/${restaurantId}/favorite`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.action === 'removed') {
+                        // お気に入りから削除された場合、カードをフェードアウトして削除
+                        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.8)';
+                        
+                        setTimeout(() => {
+                            card.remove();
+                            
+                            // 残りのお気に入りが0件になった場合、ページをリロード
+                            const remainingCards = document.querySelectorAll('.card').length;
+                            if (remainingCards === 0) {
+                                location.reload();
+                            } else {
+                                // お気に入り件数を更新
+                                const countElement = document.querySelector('.favorites-count strong');
+                                if (countElement) {
+                                    countElement.textContent = remainingCards;
+                                }
+                            }
+                        }, 500);
+                    }
+                } else {
+                    // エラー時は元に戻す
+                    console.error('お気に入り処理エラー:', data.message);
+                    alert(data.message || 'エラーが発生しました');
+                }
+            })
+            .catch(error => {
+                console.error('ネットワークエラー:', error);
+                alert('通信エラーが発生しました');
+            })
+            .finally(() => {
+                // ボタンを再有効化
+                this.disabled = false;
+                this.style.opacity = '';
+            });
+        });
+    });
+});
+</script>

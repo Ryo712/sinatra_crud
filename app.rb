@@ -4,6 +4,7 @@ require 'pg'
 require 'fileutils'
 require 'securerandom'
 require 'bcrypt'
+require 'json'
 
 # 設定とセットアップ
 
@@ -72,6 +73,16 @@ DB.create_table? :bookings do
   DateTime :updated_at, default: Sequel::CURRENT_TIMESTAMP
 end
 
+DB.create_table? :favorites do
+  primary_key :id
+  foreign_key :user_id, :users, null: false
+  foreign_key :restaurant_id, :restaurants, null: false
+  DateTime :created_at, default: Sequel::CURRENT_TIMESTAMP
+  
+  # 同じユーザーが同じレストランを複数回お気に入りできないようにする
+  unique [:user_id, :restaurant_id]
+end
+
 # モデル定義
 
 # Restaurantモデル
@@ -90,8 +101,6 @@ end
 if DB.table_exists?(:users)
   DB.schema(:users, reload: true)
 end
-
-
 
 # Userモデル
 class User < Sequel::Model
@@ -283,6 +292,16 @@ def user?
   current_user&.user?
 end
 
+# ★修正：お気に入りかどうかをチェックするヘルパーメソッド（Sequel形式）
+def is_favorited?(restaurant_id)
+  return false unless logged_in?
+  result = DB.fetch(
+    "SELECT id FROM favorites WHERE user_id = ? AND restaurant_id = ?",
+    current_user.id, restaurant_id
+  ).first
+  !result.nil?
+end
+
 # レストラン関連ルーティング
 # トップページ（一覧ページ）
 get '/' do
@@ -387,7 +406,6 @@ delete '/restaurants/:id' do
   end
 end
 
-
 # ユーザー新規登録ページ
 get '/signup' do
   erb :signup
@@ -476,6 +494,7 @@ post '/users' do
   else
     # ユーザー作成
     begin
+      user = nil
       DB.transaction do
         user = User.new(
           username: params[:username].strip,
@@ -484,6 +503,9 @@ post '/users' do
         user.password = params[:password]
         user.save
       end
+      
+      # 登録成功後、自動的にログイン
+      session[:user_id] = user.id
       
       # 成功メッセージと共にトップページにリダイレクト
       redirect '/?signup_success=true'
@@ -575,17 +597,61 @@ post '/restaurants/:id/reservations' do
   end
 end
 
+# ★修正：お気に入り追加/削除処理（トグル形式・Sequel形式）
+post '/restaurants/:id/favorite' do
+  require_login
+  halt 403 if admin?  # 管理者は利用不可
+  
+  content_type :json
+  
+  restaurant_id = params[:id].to_i
+  user_id = current_user.id
+  
+  begin
+    # 既にお気に入りかチェック
+    existing = DB.fetch(
+      "SELECT id FROM favorites WHERE user_id = ? AND restaurant_id = ?",
+      user_id, restaurant_id
+    ).first
+    
+    if existing.nil?
+      # お気に入り追加
+      DB.run(
+        "INSERT INTO favorites (user_id, restaurant_id) VALUES (?, ?)",
+        user_id, restaurant_id
+      )
+      status 201
+      { success: true, action: 'added', message: "お気に入りに追加しました" }.to_json
+    else
+      # お気に入り削除（トグル動作）
+      DB.run(
+        "DELETE FROM favorites WHERE user_id = ? AND restaurant_id = ?",
+        user_id, restaurant_id
+      )
+      status 200
+      { success: true, action: 'removed', message: "お気に入りから削除しました" }.to_json
+    end
+    
+  rescue => e
+    puts "Favorite error: #{e.message}"
+    status 500
+    { success: false, message: "エラーが発生しました" }.to_json
+  end
+end
+
 # お気に入りページ
 get '/favorite' do
-  puts "=== ルート開始 ==="
-  
-  puts "=== ログインチェック通過 ==="
+  require_login
   halt 403 if admin?  # 管理者はアクセス不可
   
-  puts "=== お気に入りページアクセス ==="
-  puts "User: #{current_user.username}"
-  puts "User ID: #{current_user.id}"
-  puts "================================"
+  # お気に入りレストランを取得
+  @favorite_restaurants = DB.fetch(
+    "SELECT r.* FROM restaurants r 
+     INNER JOIN favorites f ON r.id = f.restaurant_id 
+     WHERE f.user_id = ? 
+     ORDER BY f.created_at DESC",
+    [current_user.id]
+  ).all.map { |row| Restaurant.new(row) }
   
   erb :favorite
 end
