@@ -12,7 +12,7 @@ require 'json'
 FileUtils.mkdir_p('public/uploads') unless Dir.exist?('public/uploads')
 
 # 静的ファイル配信を有効にする
-set :public_folder, 'public'
+set :public_folder, 'public' #sinatraがフォルダ内のファイルを配信
 set :static, true
 
 # Method Override を有効にする
@@ -94,7 +94,7 @@ class Restaurant < Sequel::Model
 
   def image_path
     return nil unless image_filename
-    "/uploads/#{image_filename}"
+    "/uploads/#{image_filename}" #画像が保存されてる場合/uploads/ファイル名のパスを生成
   end
 end
 
@@ -136,7 +136,7 @@ class User < Sequel::Model
   end
   
   def user?
-    role == 'user'
+    role == 'user' #一般ユーザー判定
   end
   
   # 権限の表示名
@@ -242,11 +242,11 @@ def save_uploaded_image(image_param)
     allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
     return nil unless allowed_extensions.include?(ext)
     
-    # ユニークなファイル名を生成
+    # ユニークなファイル名を生成。ファイル名の重複防止s
     new_filename = "#{SecureRandom.uuid}#{ext}"
     file_path = "public/uploads/#{new_filename}"
     
-    # ファイルを保存
+    # ファイルシステム保存
     File.open(file_path, 'wb') do |f|
       f.write(image_param[:tempfile].read)
     end
@@ -301,11 +301,11 @@ end
 # レストラン関連ルーティング
 # トップページ（一覧ページ）
 get '/' do
-  @restaurants = Restaurant.all
+  @restaurants = Restaurant.all #全レストラン取得
   erb :index
 end
 
-# 新規作成ページ（管理者のみ）
+# 新規作成ページの表示（管理者のみアクセス）
 get '/new' do
   require_admin
   erb :new
@@ -318,13 +318,13 @@ post '/restaurants' do
     # 画像アップロード処理
     image_filename = save_uploaded_image(params[:image])
     
-    Restaurant.create(
+    Restaurant.create( 
       name: params[:name],
       description: params[:description],
       address: params[:address],
       image_filename: image_filename,
       restaurant_city: params[:restaurant_city]
-    )
+    )#DB保存
     redirect '/'
   rescue => e
     # エラーログ出力
@@ -336,7 +336,7 @@ end
 # 詳細ページ
 get '/restaurants/:id' do
   @restaurant = Restaurant[params[:id]]
-  halt 404 unless @restaurant
+  halt 404 unless @restaurant #レストランが存在しない場合404
   erb :show
 end
 
@@ -361,20 +361,20 @@ put '/restaurants/:id' do
     # 古い画像ファイルを削除（新しい画像がアップロードされた場合）
     if new_image_filename && restaurant.image_filename
       old_file_path = "public/uploads/#{restaurant.image_filename}"
-      File.delete(old_file_path) if File.exist?(old_file_path)
+      File.delete(old_file_path) if File.exist?(old_file_path) #古いファイルの適切な削除
       image_filename = new_image_filename
     else
-      image_filename = restaurant.image_filename
+      image_filename = restaurant.image_filename #新しい画像がない場合は既存の画像を保持
     end
     
-    restaurant.update(
+    restaurant.update( #DBの更新
       name: params[:name],
       description: params[:description],
       address: params[:address],
       image_filename: image_filename,
       restaurant_city: params[:restaurant_city]
     )
-    redirect '/'
+    redirect '/' #成功したら一覧表示へ
   rescue => e
     puts "Restaurant update error: #{e.message}"
     redirect "/restaurants/#{params[:id]}/edit?error=update_failed"
@@ -394,8 +394,8 @@ delete '/restaurants/:id' do
       File.delete(file_path) if File.exist?(file_path)
     end
     
-    restaurant.delete
-    redirect '/'
+    restaurant.delete #DBから削除
+    redirect '/' #成功時は一覧ページへ
   rescue => e
     puts "Restaurant deletion error: #{e.message}"
     redirect "/restaurants/#{params[:id]}?error=deletion_failed"
@@ -460,7 +460,7 @@ post '/users' do
   if params[:username].nil? || params[:username].strip.empty?
     errors << "ユーザーネームを入力してください"
   elsif !User.valid_username?(params[:username])
-    errors << "ユーザーネームは3文字以上で、英数字とアンダースコアのみ使用できます"
+    errors << "ユーザーネームは3文字以上"
   elsif User.where(username: params[:username]).first
     errors << "このユーザーネームは既に使用されています"
   end
@@ -474,7 +474,7 @@ post '/users' do
   end
   
   if params[:password].nil? || !User.valid_password?(params[:password])
-    errors << "パスワードは6文字以上で入力してください"
+    errors << "パスワードは6文字以上"
   end
   
   if params[:password] != params[:password_confirmation]
