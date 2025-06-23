@@ -40,7 +40,7 @@
                 
                 <!-- クリッカブルエリア（カードとスターのクリックを分ける） -->
                 <div class="card-content" onclick="location.href='/restaurants/<%= restaurant.id %>'">
-                    <% if restaurant.image_filename && !restaurant.image_filename.empty? %>
+                    <% if restaurant.image_filename && !restaurant.image_filename.empty? %> <!--ファイル名が存在し空文字でない-->
                         <img src="<%= restaurant.image_path %>" alt="<%= restaurant.name %>" class="item-image">
                     <% end %>
                     <h3><%= restaurant.name %></h3>
