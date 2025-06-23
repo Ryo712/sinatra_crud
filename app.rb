@@ -206,7 +206,7 @@ class Booking < Sequel::Model
     end
   end
   
-  # 表示用のフォーマット
+  # 日付表示用のフォーマット
   def formatted_date
     booking_date&.strftime('%Y年%m月%d日')
   end
@@ -220,7 +220,7 @@ end
 helpers do
   def available_times
     times = []
-    (10..21).each do |hour|
+    (10..21).each do |hour| #10時から21時まで
       times << ["#{sprintf('%02d', hour)}:00", "#{sprintf('%02d', hour)}:00"]
     end
     times
@@ -549,7 +549,7 @@ post '/restaurants/:id/reservations' do
     booking_date = Date.parse(params[:booking_date]) if params[:booking_date]
     booking_time = params[:booking_time]
     
-    # 予約を作成
+    # 予約オブジェクト作成
     booking = Booking.new(
       restaurant_id: @restaurant.id,
       user_id: current_user.id,
@@ -563,7 +563,7 @@ post '/restaurants/:id/reservations' do
     )
     
     if booking.valid?
-      booking.save
+      booking.save #DBに保存
       # 予約成功後は詳細ページにリダイレクト（成功メッセージ付き）
       redirect "/restaurants/#{@restaurant.id}?booking_success=true"
     else
@@ -627,18 +627,19 @@ post '/restaurants/:id/favorite' do
   end
 end
 
-# ★修正：お気に入りページ（正しいSequel構文）
+# ★修正：お気に入りページ（MassAssignmentRestriction回避）
 get '/favorite' do
   require_login
   halt 403 if admin?  # 管理者はアクセス不可
   
-  # お気に入りレストランを取得（正しいSequel構文）
-  @favorite_restaurants = DB[:restaurants]
-    .join(:favorites, restaurant_id: :id)
-    .where(Sequel[:favorites][:user_id] => current_user.id)
-    .order(Sequel.desc(Sequel[:favorites][:created_at]))
-    .all
-    .map { |row| Restaurant.new(row) }
+  # お気に入りレストランのIDを取得
+  favorite_restaurant_ids = DB[:favorites]
+    .where(user_id: current_user.id)
+    .order(Sequel.desc(:created_at))
+    .select_map(:restaurant_id)
+  
+  # レストランオブジェクトを取得
+  @favorite_restaurants = Restaurant.where(id: favorite_restaurant_ids).all
   
   erb :favorite
 end
