@@ -627,18 +627,19 @@ post '/restaurants/:id/favorite' do
   end
 end
 
-# ★修正：お気に入りページ（正しいSequel構文）
+# ★修正：お気に入りページ（MassAssignmentRestriction回避）
 get '/favorite' do
   require_login
   halt 403 if admin?  # 管理者はアクセス不可
   
-  # お気に入りレストランを取得（正しいSequel構文）
-  @favorite_restaurants = DB[:restaurants]
-    .join(:favorites, restaurant_id: :id)
-    .where(Sequel[:favorites][:user_id] => current_user.id)
-    .order(Sequel.desc(Sequel[:favorites][:created_at]))
-    .all
-    .map { |row| Restaurant.new(row) }
+  # お気に入りレストランのIDを取得
+  favorite_restaurant_ids = DB[:favorites]
+    .where(user_id: current_user.id)
+    .order(Sequel.desc(:created_at)) #作成日時の降順-新しい順
+    .select_map(:restaurant_id)
+  
+  # レストランオブジェクトを取得
+  @favorite_restaurants = Restaurant.where(id: favorite_restaurant_ids).all
   
   erb :favorite
 end
