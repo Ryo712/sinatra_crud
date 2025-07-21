@@ -6,6 +6,16 @@ require 'securerandom'
 require 'bcrypt'
 require 'json'
 
+# 開発環境でのみ.envファイルを読み込み
+if ENV['RACK_ENV'] != 'production'
+  begin
+    require 'dotenv'
+    Dotenv.load
+  rescue LoadError => e
+    puts "Warning: dotenv gem not available. Make sure to set environment variables manually."
+  end
+end
+
 # 設定とセットアップ
 
 # 画像保存用ディレクトリを作成
@@ -18,10 +28,31 @@ set :static, true
 # Method Override を有効にする
 enable :method_override
 enable :sessions
-set :session_secret, ENV['SESSION_SECRET'] || 'your_very_long_secret_key_here_change_in_production_must_be_at_least_64_characters_long_for_security'
 
-# データベース接続
-DB = Sequel.connect('postgres://localhost/okitable')
+# セッションシークレットの設定（環境変数必須）
+session_secret = ENV['SESSION_SECRET']
+if session_secret.nil? || session_secret.strip.empty?
+  raise "SESSION_SECRET environment variable must be set"
+elsif session_secret.length < 32
+  raise "SESSION_SECRET must be at least 32 characters long"
+end
+set :session_secret, session_secret
+
+# データベース接続（環境変数必須）
+database_url = ENV['DATABASE_URL']
+if database_url.nil? || database_url.strip.empty?
+  raise "DATABASE_URL environment variable must be set"
+end
+
+begin
+  DB = Sequel.connect(database_url)
+  # データベース接続テスト
+  DB.test_connection
+  puts "Database connected successfully: #{database_url.gsub(/:[^:@]*@/, ':***@')}" # パスワード部分を隠す
+rescue => e
+  puts "Database connection failed: #{e.message}"
+  raise e
+end
 
 # データベーステーブル作成
 
